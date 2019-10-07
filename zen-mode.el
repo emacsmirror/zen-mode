@@ -1,10 +1,10 @@
-;;; zig-mode.el --- A major mode for the Zig programming language -*- lexical-binding: t -*-
+;;; zen-mode.el --- A major mode for the Zen programming language -*- lexical-binding: t -*-
 
-;; Version: 0.0.8
-;; Author: Andrea Orru <andreaorru1991@gmail.com>, Andrew Kelley <superjoe30@gmail.com>
-;; Keywords: zig, languages
+;; Version: 0.1.0
+;; Author: Andrea Orru <andreaorru1991@gmail.com>, Andrew Kelley <superjoe30@gmail.com>, kristopher tate <kt@connectfree.co.jp>
+;; Keywords: zen, languages
 ;; Package-Requires: ((emacs "24"))
-;; URL: https://github.com/zig-lang/zig-mode
+;; URL: https://github.com/zenlang/zen-mode
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,25 +24,25 @@
 
 ;;; Code:
 
-(defun zig-re-word (inner)
+(defun zen-re-word (inner)
   "Construct a regular expression for the word INNER."
   (concat "\\<" inner "\\>"))
 
-(defun zig-re-grab (inner)
+(defun zen-re-grab (inner)
   "Construct a group regular expression for INNER."
   (concat "\\(" inner "\\)"))
 
-(defconst zig-re-identifier "[[:word:]_][[:word:]_[:digit:]]*")
-(defconst zig-re-type-annotation
-  (concat (zig-re-grab zig-re-identifier)
+(defconst zen-re-identifier "[[:word:]_][[:word:]_[:digit:]]*")
+(defconst zen-re-type-annotation
+  (concat (zen-re-grab zen-re-identifier)
           "[[:space:]]*:[[:space:]]*"
-          (zig-re-grab zig-re-identifier)))
+          (zen-re-grab zen-re-identifier)))
 
-(defun zig-re-definition (dtype)
+(defun zen-re-definition (dtype)
   "Construct a regular expression for definitions of type DTYPE."
-  (concat (zig-re-word dtype) "[[:space:]]+" (zig-re-grab zig-re-identifier)))
+  (concat (zen-re-word dtype) "[[:space:]]+" (zen-re-grab zen-re-identifier)))
 
-(defconst zig-mode-syntax-table
+(defconst zen-mode-syntax-table
   (let ((table (make-syntax-table)))
 
     ;; Operators
@@ -60,7 +60,7 @@
 
     table))
 
-(defconst zig-keywords
+(defconst zen-keywords
   '(
     ;; Storage
     "const" "var" "extern" "packed" "export" "pub" "noalias" "inline"
@@ -82,7 +82,7 @@
     ;; Other keywords
     "fn" "use" "test"))
 
-(defconst zig-types
+(defconst zen-types
   '(
     ;; Integer types
     "i2" "u2" "i3" "u3" "i4" "u4" "i5" "u5" "i6" "u6" "i7" "u7" "i8" "u8"
@@ -102,7 +102,7 @@
     ;; Other types
     "bool" "void" "noreturn" "type" "error" "anyerror" "promise"))
 
-(defconst zig-constants
+(defconst zen-constants
   '(
     ;; Boolean
     "true" "false"
@@ -110,64 +110,64 @@
     ;; Other constants
     "null" "undefined" "this"))
 
-(defconst zig-electric-indent-chars
+(defconst zen-electric-indent-chars
   '( ?\; ?, ?) ?] ?} ))
 
-(defgroup zig-mode nil
-  "Support for Zig code."
-  :link '(url-link "https://ziglang.org/")
+(defgroup zen-mode nil
+  "Support for Zen."
+  :link '(url-link "https://www.zen-lang.org/")
   :group 'languages)
 
-(defcustom zig-indent-offset 4
-  "Indent Zig code by this number of spaces."
+(defcustom zen-indent-offset 4
+  "Indent Zen code by this number of spaces."
   :type 'integer
-  :group 'zig-mode
+  :group 'zen-mode
   :safe #'integerp)
 
-(defface zig-multiline-string-face
+(defface zen-multiline-string-face
   '((t :inherit font-lock-string-face))
   "Face for multiline string literals."
-  :group 'zig-mode)
+  :group 'zen-mode)
 
-(defvar zig-font-lock-keywords
+(defvar zen-font-lock-keywords
   (append
    `(
      ;; Builtins (prefixed with @)
-     (,(concat "@" zig-re-identifier) . font-lock-builtin-face)
+     (,(concat "@" zen-re-identifier) . font-lock-builtin-face)
 
      ;; Keywords, constants and types
-     (,(regexp-opt zig-keywords  'symbols) . font-lock-keyword-face)
-     (,(regexp-opt zig-constants 'symbols) . font-lock-constant-face)
-     (,(regexp-opt zig-types     'symbols) . font-lock-type-face)
+     (,(regexp-opt zen-keywords  'symbols) . font-lock-keyword-face)
+     (,(regexp-opt zen-constants 'symbols) . font-lock-constant-face)
+     (,(regexp-opt zen-types     'symbols) . font-lock-type-face)
 
      ;; Type annotations (both variable and type)
-     (,zig-re-type-annotation 1 font-lock-variable-name-face)
-     (,zig-re-type-annotation 2 font-lock-type-face)
+     (,zen-re-type-annotation 1 font-lock-variable-name-face)
+     (,zen-re-type-annotation 2 font-lock-type-face)
      )
 
    ;; Definitions
    (mapcar #'(lambda (x)
-               (list (zig-re-definition (car x))
+               (list (zen-re-definition (car x))
                      1 (cdr x)))
            '(("const" . font-lock-variable-name-face)
              ("var"   . font-lock-variable-name-face)
              ("fn"    . font-lock-function-name-face)))))
 
-(defun zig-paren-nesting-level () (nth 0 (syntax-ppss)))
-(defun zig-currently-in-str () (nth 3 (syntax-ppss)))
-(defun zig-start-of-current-str-or-comment () (nth 8 (syntax-ppss)))
+(defun zen-paren-nesting-level () (nth 0 (syntax-ppss)))
+(defun zen-currently-in-str () (nth 3 (syntax-ppss)))
+(defun zen-start-of-current-str-or-comment () (nth 8 (syntax-ppss)))
 
-(defun zig-skip-backwards-past-whitespace-and-comments ()
+(defun zen-skip-backwards-past-whitespace-and-comments ()
   (while (or
           ;; If inside a comment, jump to start of comment.
-          (let ((start (zig-start-of-current-str-or-comment)))
+          (let ((start (zen-start-of-current-str-or-comment)))
             (and start
-                 (not (zig-currently-in-str))
+                 (not (zen-currently-in-str))
                  (goto-char start)))
           ;; Skip backwards past whitespace and comment end delimiters.
           (/= 0 (skip-syntax-backward " >")))))
 
-(defun zig-mode-indent-line ()
+(defun zen-mode-indent-line ()
   (interactive)
   ;; First, calculate the column that this line should be indented to.
   (let ((indent-col
@@ -180,14 +180,14 @@
                   (paren-level
                    (save-excursion
                      (while (looking-at "[]})]") (forward-char))
-                     (zig-paren-nesting-level)))
+                     (zen-paren-nesting-level)))
                   ;; prev-block-indent-col: If we're within delimiters, this is
                   ;; the column to which the start of that block is indented
                   ;; (if we're not, this is just zero).
                   (prev-block-indent-col
                    (if (<= paren-level 0) 0
                      (save-excursion
-                       (while (>= (zig-paren-nesting-level) paren-level)
+                       (while (>= (zen-paren-nesting-level) paren-level)
                          (backward-up-list)
                          (back-to-indentation))
                        (current-column))))
@@ -201,20 +201,20 @@
                            (forward-char)
                            (and (not (looking-at " *\\(//[^\n]*\\)?\n"))
                                 (current-column)))
-                         (+ prev-block-indent-col zig-indent-offset))))
+                         (+ prev-block-indent-col zen-indent-offset))))
                   ;; is-expr-continutation: True if this line continues an
                   ;; expression from the previous line, false otherwise.
                   (is-expr-continutation
                    (and
                     (not (looking-at "[]});]"))
                     (save-excursion
-                      (zig-skip-backwards-past-whitespace-and-comments)
+                      (zen-skip-backwards-past-whitespace-and-comments)
                       (when (> (point) 1)
                         (backward-char)
                         (not (looking-at "[,;([{}]")))))))
              ;; Now we can calculate indent-col:
              (if is-expr-continutation
-                 (+ base-indent-col zig-indent-offset)
+                 (+ base-indent-col zen-indent-offset)
                base-indent-col)))))
     ;; If point is within the indentation whitespace, move it to the end of the
     ;; new indentation whitespace (which is what the indent-line-to function
@@ -224,11 +224,11 @@
         (indent-line-to indent-col)
       (save-excursion (indent-line-to indent-col)))))
 
-(defun zig-syntax-propertize-to-newline-if-in-multiline-str (end)
+(defun zen-syntax-propertize-to-newline-if-in-multiline-str (end)
   ;; First, we need to check if we're in a multiline string literal; if we're
   ;; not, do nothing.
-  (when (zig-currently-in-str)
-    (let ((start (zig-start-of-current-str-or-comment)))
+  (when (zen-currently-in-str)
+    (let ((start (zen-start-of-current-str-or-comment)))
       (when (save-excursion
               (goto-char start)
               (looking-at "\\\\\\\\"))
@@ -246,7 +246,7 @@
                                              'syntax-table
                                              (string-to-syntax "|")))
                       end)))
-          ;; Zig multiline string literals don't support escapes, so mark all
+          ;; Zen multiline string literals don't support escapes, so mark all
           ;; backslashes (up to `stop') as punctation instead of escapes.
           (save-excursion
             (goto-char (+ 2 start))
@@ -255,27 +255,27 @@
                                  'syntax-table (string-to-syntax "."))
               (goto-char (match-end 0))))
           ;; Move to the end of the string (or `end'), so that
-          ;; zig-syntax-propertize can pick up from there.
+          ;; zen-syntax-propertize can pick up from there.
           (goto-char stop))))))
 
-(defun zig-syntax-propertize (start end)
+(defun zen-syntax-propertize (start end)
   (goto-char start)
-  (zig-syntax-propertize-to-newline-if-in-multiline-str end)
+  (zen-syntax-propertize-to-newline-if-in-multiline-str end)
   (funcall
    (syntax-propertize-rules
     ;; Multiline strings
     ("\\(\\\\\\)\\\\"
      (1 (prog1 "|"
 	  (goto-char (match-end 0))
-	  (zig-syntax-propertize-to-newline-if-in-multiline-str end)))))
+	  (zen-syntax-propertize-to-newline-if-in-multiline-str end)))))
    (point) end))
 
-(defun zig-mode-syntactic-face-function (state)
+(defun zen-mode-syntactic-face-function (state)
   (if (nth 3 state)
       (save-excursion
         (goto-char (nth 8 state))
         (if (looking-at "\\\\\\\\")
-            'zig-multiline-string-face
+            'zen-multiline-string-face
           'font-lock-string-face))
     (save-excursion
       (goto-char (nth 8 state))
@@ -284,39 +284,39 @@
         'font-lock-comment-face))))
 
 ;;; Imenu support
-(defun zig-re-structure-def-imenu (stype)
+(defun zen-re-structure-def-imenu (stype)
   "Construct a regular expression for strucutres definitions of type STYPE."
-  (concat (zig-re-word "const") "[[:space:]]+"
-		  (zig-re-grab zig-re-identifier)
+  (concat (zen-re-word "const") "[[:space:]]+"
+		  (zen-re-grab zen-re-identifier)
 		  ".*"
-		  (zig-re-word stype)))
+		  (zen-re-word stype)))
 
-(defvar zig-imenu-generic-expression
+(defvar zen-imenu-generic-expression
   (append (mapcar #'(lambda (x)
-					  (list (capitalize x) (zig-re-structure-def-imenu x) 1))
+					  (list (capitalize x) (zen-re-structure-def-imenu x) 1))
 				  '("enum" "struct" "union"))
-		  `(("Fn" ,(zig-re-definition "fn") 1))))
+		  `(("Fn" ,(zen-re-definition "fn") 1))))
 
 ;;;###autoload
-(define-derived-mode zig-mode prog-mode "Zig"
-  "A major mode for the Zig programming language."
+(define-derived-mode zen-mode prog-mode "Zen"
+  "A major mode for the Zen programming language."
   (setq-local comment-start "// ")
   (setq-local comment-end "")
   (setq-local electric-indent-chars
-              (append zig-electric-indent-chars
+              (append zen-electric-indent-chars
                       (and (boundp 'electric-indent-chars)
                            electric-indent-chars)))
-  (setq-local indent-line-function 'zig-mode-indent-line)
-  (setq-local indent-tabs-mode nil)  ; Zig forbids tab characters.
-  (setq-local syntax-propertize-function 'zig-syntax-propertize)
-  (setq-local imenu-generic-expression zig-imenu-generic-expression)
-  (setq font-lock-defaults '(zig-font-lock-keywords
+  (setq-local indent-line-function 'zen-mode-indent-line)
+  (setq-local indent-tabs-mode nil)  ; Zen forbids tab characters.
+  (setq-local syntax-propertize-function 'zen-syntax-propertize)
+  (setq-local imenu-generic-expression zen-imenu-generic-expression)
+  (setq font-lock-defaults '(zen-font-lock-keywords
                              nil nil nil nil
                              (font-lock-syntactic-face-function
-                              . zig-mode-syntactic-face-function))))
+                              . zen-mode-syntactic-face-function))))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.zig\\'" . zig-mode))
+(add-to-list 'auto-mode-alist '("\\.zen\\'" . zen-mode))
 
-(provide 'zig-mode)
-;;; zig-mode.el ends here
+(provide 'zen-mode)
+;;; zen-mode.el ends here
