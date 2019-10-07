@@ -67,7 +67,7 @@
     "comptime" "nakedcc" "stdcallcc" "volatile" "align" "linksection"
 
     ;; Structure
-    "struct" "enum" "union"
+    "struct" "enum" "union" "interface"
 
     ;; Statement
     "break" "return" "continue" "asm" "defer" "errdefer" "unreachable"
@@ -85,7 +85,7 @@
 (defconst zen-types
   '(
     ;; Integer types
-    "i2" "u2" "i3" "u3" "i4" "u4" "i5" "u5" "i6" "u6" "i7" "u7" "i8" "u8"
+    "i1" "u1" "i2" "u2" "i3" "u3" "i4" "u4" "i5" "u5" "i6" "u6" "i7" "u7" "i8" "u8"
     "i16" "u16" "i29" "u29" "i32" "u32" "i64" "u64" "i128" "u128"
     "isize" "usize"
 
@@ -294,7 +294,7 @@
 (defvar zen-imenu-generic-expression
   (append (mapcar #'(lambda (x)
 					  (list (capitalize x) (zen-re-structure-def-imenu x) 1))
-				  '("enum" "struct" "union"))
+				  '("enum" "struct" "union" "interface"))
 		  `(("Fn" ,(zen-re-definition "fn") 1))))
 
 ;;;###autoload
