@@ -1,23 +1,22 @@
 # zen-mode
 
 Syntax highlighting and automatic indentation for the
-[Zen programming language](http://www.zen-lang.org) in Emacs. Requires Emacs 24 or later.
+[Zen Programming Language](http://www.zen-lang.org) in Emacs. Requires Emacs 24 or later.
 
 ## Installation
 
-[![MELPA](https://melpa.org/packages/zen-mode-badge.svg)](https://melpa.org/#/zen-mode)
-
-Simply install the `zen-mode` package via [MELPA](https://melpa.org/#/getting-started).
-
-Alternatively, you can `git clone` the `zen-mode` repository somewhere
-(e.g. under your `~/.emacs.d/`), then add the following to your `.emacs` file:
+1. Run `mkdir -p ~/.emacs.d/ && cd ~/.emacs.d/`
+2. Run `git clone https://github.com/zenlang/zen-mode.git`
+3. Add the following to your `.emacs` file:
 
 ```elisp
 (unless (version< emacs-version "24")
-  (add-to-list 'load-path "~/path/to/your/zen-mode/")
+  (add-to-list 'load-path "~/.emacs.d/zen-mode/")
   (autoload 'zen-mode "zen-mode" nil t)
   (add-to-list 'auto-mode-alist '("\\.zen\\'" . zen-mode)))
 ```
+
+That's it! Have fun and be safe on your Zen Journey.
 
 ## Testing
 
