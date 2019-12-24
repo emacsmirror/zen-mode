@@ -153,11 +153,11 @@
              ("var"   . font-lock-variable-name-face)
              ("fn"    . font-lock-function-name-face)))))
 
-(defun zen-paren-nesting-level () (nth 0 (syntax-ppss)))
-(defun zen-currently-in-str () (nth 3 (syntax-ppss)))
-(defun zen-start-of-current-str-or-comment () (nth 8 (syntax-ppss)))
+(defun zen-paren-nesting-level nil "Return paren nesting level." () (nth 0 (syntax-ppss)))
+(defun zen-currently-in-str nil "Are we currently inside a string?" () (nth 3 (syntax-ppss)))
+(defun zen-start-of-current-str-or-comment nil "Are we at the start of current string or comment?" () (nth 8 (syntax-ppss)))
 
-(defun zen-skip-backwards-past-whitespace-and-comments ()
+(defun zen-skip-backwards-past-whitespace-and-comments nil "Used for skipping backwards past whitespace and comments." ()
   (while (or
           ;; If inside a comment, jump to start of comment.
           (let ((start (zen-start-of-current-str-or-comment)))
@@ -167,7 +167,7 @@
           ;; Skip backwards past whitespace and comment end delimiters.
           (/= 0 (skip-syntax-backward " >")))))
 
-(defun zen-mode-indent-line ()
+(defun zen-mode-indent-line nil "Indent line function for `zen-mode'." ()
   (interactive)
   ;; First, calculate the column that this line should be indented to.
   (let ((indent-col
@@ -225,8 +225,9 @@
       (save-excursion (indent-line-to indent-col)))))
 
 (defun zen-syntax-propertize-to-newline-if-in-multiline-str (end)
-  ;; First, we need to check if we're in a multiline string literal; if we're
-  ;; not, do nothing.
+  "Check if we're in a multiline string literal; if we're not, do nothing.  \
+Return at EOF or when END is found."
+
   (when (zen-currently-in-str)
     (let ((start (zen-start-of-current-str-or-comment)))
       (when (save-excursion
@@ -259,6 +260,7 @@
           (goto-char stop))))))
 
 (defun zen-syntax-propertize (start end)
+  "Function for applying `syntax-table' properties to a specified stretch of text between START and END."
   (goto-char start)
   (zen-syntax-propertize-to-newline-if-in-multiline-str end)
   (funcall
@@ -271,6 +273,7 @@
    (point) end))
 
 (defun zen-mode-syntactic-face-function (state)
+  "Determines which face to use for a given STATE syntactic element (a string or a comment)."
   (if (nth 3 state)
       (save-excursion
         (goto-char (nth 8 state))
@@ -287,9 +290,9 @@
 (defun zen-re-structure-def-imenu (stype)
   "Construct a regular expression for strucutres definitions of type STYPE."
   (concat (zen-re-word "const") "[[:space:]]+"
-		  (zen-re-grab zen-re-identifier)
-		  ".*"
-		  (zen-re-word stype)))
+      (zen-re-grab zen-re-identifier)
+      ".*"
+      (zen-re-word stype)))
 
 (defvar zen-imenu-generic-expression
   (append (mapcar #'(lambda (x)
