@@ -3,7 +3,7 @@
 ;; Version: 0.1.0
 ;; Author: Andrea Orru <andreaorru1991@gmail.com>, Andrew Kelley <superjoe30@gmail.com>, kristopher tate <kt@connectfree.co.jp>
 ;; Keywords: zen, languages
-;; Package-Requires: ((emacs "24"))
+;; Package-Requires: ((emacs "24.3"))
 ;; URL: https://github.com/zenlang/zen-mode
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;
+;; This package provides a major mode for the Zen programming language
 
 ;;; Code:
 
@@ -113,7 +113,7 @@
 (defconst zen-electric-indent-chars
   '( ?\; ?, ?) ?] ?} ))
 
-(defgroup zen-mode nil
+(defgroup zen nil
   "Support for Zen."
   :link '(url-link "https://www.zen-lang.org/")
   :group 'languages)
@@ -121,13 +121,13 @@
 (defcustom zen-indent-offset 4
   "Indent Zen code by this number of spaces."
   :type 'integer
-  :group 'zen-mode
+  :group 'zen
   :safe #'integerp)
 
 (defface zen-multiline-string-face
   '((t :inherit font-lock-string-face))
   "Face for multiline string literals."
-  :group 'zen-mode)
+  :group 'zen)
 
 (defvar zen-font-lock-keywords
   (append
@@ -142,8 +142,7 @@
 
      ;; Type annotations (both variable and type)
      (,zen-re-type-annotation 1 font-lock-variable-name-face)
-     (,zen-re-type-annotation 2 font-lock-type-face)
-     )
+     (,zen-re-type-annotation 2 font-lock-type-face) )
 
    ;; Definitions
    (mapcar #'(lambda (x)
@@ -268,8 +267,8 @@ Return at EOF or when END is found."
     ;; Multiline strings
     ("\\(\\\\\\)\\\\"
      (1 (prog1 "|"
-	  (goto-char (match-end 0))
-	  (zen-syntax-propertize-to-newline-if-in-multiline-str end)))))
+    (goto-char (match-end 0))
+    (zen-syntax-propertize-to-newline-if-in-multiline-str end)))))
    (point) end))
 
 (defun zen-mode-syntactic-face-function (state)
