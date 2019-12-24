@@ -166,7 +166,7 @@
           ;; Skip backwards past whitespace and comment end delimiters.
           (/= 0 (skip-syntax-backward " >")))))
 
-(defun zen-mode-indent-line nil "Indent line function for `zen-mode'." ()
+(defun zen-mode-indent-line nil "Indent line function for `zen-mode'."
   (interactive)
   ;; First, calculate the column that this line should be indented to.
   (let ((indent-col
