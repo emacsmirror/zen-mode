@@ -17,7 +17,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;; This package provides a major mode for the Zen programming language
@@ -111,7 +111,7 @@
     "null" "undefined" "this"))
 
 (defconst zen-electric-indent-chars
-  '( ?\; ?, ?) ?] ?} ))
+  '( ?\; ?, ?\) ?\] ?} ))
 
 (defgroup zen nil
   "Support for Zen."
@@ -145,7 +145,7 @@
      (,zen-re-type-annotation 2 font-lock-type-face) )
 
    ;; Definitions
-   (mapcar #'(lambda (x)
+   (mapcar (lambda (x)
                (list (zen-re-definition (car x))
                      1 (cdr x)))
            '(("const" . font-lock-variable-name-face)
@@ -294,10 +294,10 @@ Return at EOF or when END is found."
       (zen-re-word stype)))
 
 (defvar zen-imenu-generic-expression
-  (append (mapcar #'(lambda (x)
-					  (list (capitalize x) (zen-re-structure-def-imenu x) 1))
-				  '("enum" "struct" "union" "interface"))
-		  `(("Fn" ,(zen-re-definition "fn") 1))))
+  (append (mapcar (lambda (x)
+            (list (capitalize x) (zen-re-structure-def-imenu x) 1))
+          '("enum" "struct" "union" "interface"))
+      `(("Fn" ,(zen-re-definition "fn") 1))))
 
 ;;;###autoload
 (define-derived-mode zen-mode prog-mode "Zen"
