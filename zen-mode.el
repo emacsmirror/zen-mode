@@ -239,23 +239,21 @@ Return at EOF or when END is found."
                           (goto-char start)
                           (re-search-forward "\n" end t))
                         (prog1 (match-end 0)
-                          ;; We found the closing newline, so mark it as the
-                          ;; end of this string literal.
-                          (put-text-property (match-beginning 0)
-                                             (match-end 0)
-                                             'syntax-table
-                                             (string-to-syntax "|")))
+                          (let ((str-contents-begin (+ 2 start))
+                                (str-contents-end   (- (match-beginning 0) 1))
+                                (str-end (match-beginning 0)))
+                            ;; clear
+                            (when (/= str-contents-begin str-contents-end)
+                              (put-text-property str-contents-begin
+                                                 str-contents-end
+                                                 'syntax-table
+                                                 (string-to-syntax ".")))
+                            ;; close string
+                            (put-text-property str-end
+                                               (+ str-end 1)
+                                               'syntax-table
+                                               (string-to-syntax "|"))))
                       end)))
-          ;; Zen multiline string literals don't support escapes, so mark all
-          ;; backslashes (up to `stop') as punctation instead of escapes.
-          (save-excursion
-            (goto-char (+ 2 start))
-            (while (re-search-forward "\\\\" stop t)
-              (put-text-property (match-beginning 0) (match-end 0)
-                                 'syntax-table (string-to-syntax "."))
-              (goto-char (match-end 0))))
-          ;; Move to the end of the string (or `end'), so that
-          ;; zen-syntax-propertize can pick up from there.
           (goto-char stop))))))
 
 (defun zen-syntax-propertize (start end)
@@ -267,8 +265,8 @@ Return at EOF or when END is found."
     ;; Multiline strings
     ("\\(\\\\\\)\\\\"
      (1 (prog1 "|"
-    (goto-char (match-end 0))
-    (zen-syntax-propertize-to-newline-if-in-multiline-str end)))))
+          (goto-char (match-end 0))
+          (zen-syntax-propertize-to-newline-if-in-multiline-str end)))))
    (point) end))
 
 (defun zen-mode-syntactic-face-function (state)
