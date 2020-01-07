@@ -239,11 +239,11 @@ Return at EOF or when END is found."
                           (goto-char start)
                           (re-search-forward "\n" end t))
                         (prog1 (match-end 0)
-                          (let ((str-contents-begin (+ 2 start))
-                                (str-contents-end   (- (match-beginning 0) 1))
+                          (let ((str-contents-begin (+ 1 start))
+                                (str-contents-end   (match-beginning 0))
                                 (str-end (match-beginning 0)))
-                            ;; clear
-                            (when (/= str-contents-begin str-contents-end)
+                            ;; set characters
+                            (when (< str-contents-begin str-contents-end)
                               (put-text-property str-contents-begin
                                                  str-contents-end
                                                  'syntax-table
@@ -265,8 +265,16 @@ Return at EOF or when END is found."
     ;; Multiline strings
     ("\\(\\\\\\)\\\\"
      (1 (prog1 "|"
-          (goto-char (match-end 0))
-          (zen-syntax-propertize-to-newline-if-in-multiline-str end)))))
+          (if (= (match-beginning 0) (zen-start-of-current-str-or-comment))
+              ;; multiline strings
+              (progn
+                (goto-char (match-end 0))
+                (zen-syntax-propertize-to-newline-if-in-multiline-str end))
+              ;; * escape character
+              (put-text-property (match-beginning 0)
+                                 (+ 1 (match-beginning 0))
+                                 'syntax-table
+                                 (string-to-syntax "\\")))))))
    (point) end))
 
 (defun zen-mode-syntactic-face-function (state)

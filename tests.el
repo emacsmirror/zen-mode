@@ -101,6 +101,25 @@ const python =
      ("\\\\def main():\n" zen-multiline-string-face)
      ("\\\\    print(\"Hello, world!\")\n" zen-multiline-string-face))))
 
+(ert-deftest test-font-lock-multiline-str-literal-for-empty-line ()
+  (zen-test-font-lock
+   "
+const str =
+    \\\\string\\
+    \\\\
+;"
+   '(("const" font-lock-keyword-face)
+     ("str" font-lock-variable-name-face)
+     ("\\\\string\\\n" zen-multiline-string-face)
+     ("\\\\\n" zen-multiline-string-face))))
+
+(ert-deftest test-font-lock-single-str-literal-escape ()
+  (zen-test-font-lock
+   "const str = \"string\\\\\";"
+   '(("const" font-lock-keyword-face)
+     ("str" font-lock-variable-name-face)
+     ("\"string\\\\\"" font-lock-string-face))))
+
 ;;===========================================================================;;
 ;; Indentation tests
 
