@@ -264,9 +264,13 @@ Return at EOF or when END is found."
    (syntax-propertize-rules
     ;; Multiline strings
     ("\\(\\\\\\)\\\\"
-     (1 (prog1 "|"
-    (goto-char (match-end 0))
-    (zen-syntax-propertize-to-newline-if-in-multiline-str end)))))
+     (1 (prog1
+            ;; return the escape character syntax if the position is in a string literal.
+            (string-to-syntax (if (zen-currently-in-str) "\\" "|"))
+          ;; multiline strings
+          (when (= (match-beginning 0) (zen-start-of-current-str-or-comment))
+            (goto-char (match-end 0))
+            (zen-syntax-propertize-to-newline-if-in-multiline-str end))))))
    (point) end))
 
 (defun zen-mode-syntactic-face-function (state)
