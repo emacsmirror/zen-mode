@@ -120,6 +120,53 @@ const str =
      ("str" font-lock-variable-name-face)
      ("\"string\\\\\"" font-lock-string-face))))
 
+(ert-deftest test-font-lock-break-label ()
+  (zen-test-font-lock
+   "break :brk 0;"
+   '(("break" font-lock-keyword-face)
+     (" :brk" zen-label-face))))
+
+(ert-deftest test-font-lock-break ()
+  (zen-test-font-lock
+   "break;"
+   '(("break" font-lock-keyword-face))))
+
+(ert-deftest test-font-lock-catch ()
+  (zen-test-font-lock
+   "catch |err| brk: {};"
+   '(("catch" font-lock-keyword-face)
+     ("|" zen-catch-vertical-bar-face)
+     ("err" font-lock-variable-name-face)
+     ("|" zen-catch-vertical-bar-face)
+     ("brk:" zen-label-face))))
+
+(ert-deftest test-font-lock-field ()
+  (zen-test-font-lock
+   "a : *u32, b: []u8, c:[4]u8, d:[*c]u8, e:[*:0]u8, f:?*[]u8, g: *@Vector,"
+   '(("a" font-lock-variable-name-face)
+     ("*u32" font-lock-type-face)
+     ("b" font-lock-variable-name-face)
+     ("[]u8" font-lock-type-face)
+     ("c" font-lock-variable-name-face)
+     ("[4]u8" font-lock-type-face)
+     ("d" font-lock-variable-name-face)
+     ("[*c]u8" font-lock-type-face)
+     ("e" font-lock-variable-name-face)
+     ("[*:0]u8" font-lock-type-face)
+     ("f" font-lock-variable-name-face)
+     ("?*[]u8" font-lock-type-face)
+     ("g" font-lock-variable-name-face)
+     ("@Vector" font-lock-type-face))))
+
+(ert-deftest test-font-lock-builtin ()
+  (zen-test-font-lock
+   "@call @TypeOf @Type @Frame @Vector"
+   '(("@call" font-lock-builtin-face)
+     ("@TypeOf" font-lock-type-face)
+     ("@Type" font-lock-type-face)
+     ("@Frame" font-lock-type-face)
+     ("@Vector" font-lock-type-face))))
+
 ;;===========================================================================;;
 ;; Indentation tests
 
