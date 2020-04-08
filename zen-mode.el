@@ -44,24 +44,17 @@
 (defconst zen-builtin-types
   "@\\(?:Frame\\|Vector\\|Type\\(Of\\)?\\)")
 
-(defconst zen-re-align-syntax
-  (concat "\\(?:align(\\(?:[[:digit:]]+\\|@alignOf("
-          zen-re-identifier
-          ")\\))[[:space:]]*\\)"))
-(defconst zen-re-const1-syntax (zen-re-group "const[[:space:]]+"))
-(defconst zen-re-const0-syntax (zen-re-group "const"))
-(defconst zen-re-volatile1-syntax (zen-re-group "volatile[[:space:]]+"))
-(defconst zen-re-volatile0-syntax (zen-re-group "volatile"))
 (defconst zen-re-align-const-volatile-syntax
   (concat (zen-re-group
            (concat
-            "const" (zen-re-group (concat "[[:space:]]+"
-                                          zen-re-align-syntax
-                                          "\\|[[:space:]]+volatile"))
-            "*\\|volatile"(zen-re-group (concat "[[:space:]]+const\\|"
-                                                zen-re-align-syntax))
-            "*\\|"
-            zen-re-align-syntax (zen-re-group "[[:space:]]+volatile\\|[[:space:]]+const")
+            (zen-re-group
+             (concat
+              "const[[:space:]]\\|volatile[[:space:]]\\|"
+              "align(\\(?:[[:space:]]*[[:digit:]]+[[:space:]]*\\|[[:space:]]*@alignOf("
+              zen-re-identifier
+              "[[:space:]]*)\\))"
+              ))
+            "[[:space:]]*"
             ))))
 
 (defconst zen-re-array-type-syntax
@@ -71,13 +64,13 @@
           (zen-re-group (concat ":[[:digit:]]+\\|:" ;; :0
                                 zen-re-id-path))    ;; :sentinel
           "?\\][[:space:]]*"
-          (zen-re-group zen-re-align-const-volatile-syntax)"?"))
+          (zen-re-group zen-re-align-const-volatile-syntax)"*"))
 
 
 (defconst zen-re-pointer-type-syntax
   (concat "[*]"
           (zen-re-group ":vtable[[:space:]]+")"?"
-          zen-re-align-const-volatile-syntax "?"
+          zen-re-align-const-volatile-syntax "*"
           (zen-re-group "vtable")"?"))
 
 (defconst zen-re-types-syntax
@@ -148,6 +141,7 @@
     ;; Storage
     "const" "var" "extern" "packed" "export" "pub" "noalias" "inline"
     "comptime" "nakedcc" "callconv" "volatile" "align" "linksection"
+    "threadlocal"
 
     ;; Structure
     "struct" "enum" "union" "interface" "error"
@@ -162,15 +156,14 @@
     ;; Repeat
     "while" "for"
 
-    "\\.\\."
-
     ;; Other keywords
     "fn" "use" "test" "usingnamespace" "noasync"
 
     ;; function
     "noinline" "deprecated"
     ))
-
+(defconst zen-slice-range "\\.\\.")
+(defconst zen-int-range "\\.\\.\\.")
 (defconst zen-types
   '(
     ;; Integer types
@@ -193,6 +186,7 @@
     ;; Frame
     "anyframe"
     ))
+
 
 (defconst zen-constants
   '(
@@ -231,6 +225,16 @@
   "Face for catch |x|."
   :group 'zen)
 
+(defface zen-slice-range-face
+  '((t :inherit font-lock-keyword-face))
+  "Face for .."
+  :group 'zen)
+
+(defface zen-int-range-face
+  '((t :inherit font-lock-negation-char-face))
+  "Face for ..."
+  :group 'zen)
+
 (defvar zen-font-lock-keywords
   `(
     (,(zen-re-definition "fn") 1 font-lock-function-name-face)
@@ -256,15 +260,11 @@
                          (4 'zen-catch-vertical-bar-face))
 
 
-
-
-
     ;; Keywords, constants and types
     (,(regexp-opt zen-constants 'symbols) . font-lock-constant-face)
     (,(regexp-opt zen-types     'symbols) . font-lock-type-face)
-
-
-    ("[.][.]" . font-lock-keyword-face)
+    (,zen-int-range . 'zen-int-range-face)
+    (,zen-slice-range . 'zen-slice-range-face)
     ("[!.]+" . font-lock-negation-char-face)
 
     ))
