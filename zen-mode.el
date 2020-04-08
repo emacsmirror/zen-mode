@@ -141,7 +141,7 @@
     ;; Storage
     "const" "var" "extern" "packed" "export" "pub" "noalias" "inline"
     "comptime" "callconv" "volatile" "align" "linksection"
-    "threadlocal"
+    "threadlocal" "allowzero"
 
     ;; Structure
     "struct" "enum" "union" "interface" "error"
