@@ -32,15 +32,91 @@
   "Construct a group regular expression for INNER."
   (concat "\\(" inner "\\)"))
 
+(defun zen-re-group (inner)
+  "Construct a non-capture group regular expression for INNER."
+  (concat "\\(?:" inner "\\)"))
+
 (defconst zen-re-identifier "[[:word:]_][[:word:]_[:digit:]]*")
+(defconst zen-re-id-path (concat zen-re-identifier
+                                 (zen-re-group (concat "[[:space:]]*\\.[[:space:]]*"
+                                                       zen-re-identifier))
+                                 "*"))
+(defconst zen-builtin-types
+  "@\\(?:Frame\\|Vector\\|Type\\(Of\\)?\\)")
+
+(defconst zen-re-align-const-volatile-syntax
+  (concat (zen-re-group
+           (concat
+            (zen-re-group
+             (concat
+              "const[[:space:]]\\|volatile[[:space:]]\\|"
+              "align(\\(?:[[:space:]]*[[:digit:]]+[[:space:]]*\\|[[:space:]]*@alignOf("
+              zen-re-identifier
+              "[[:space:]]*)\\))"
+              ))
+            "[[:space:]]*"
+            ))))
+
+(defconst zen-re-array-type-syntax
+  (concat "\\["
+          (zen-re-group "\\*c?\\|[[:digit:]]+")
+          "?"
+          (zen-re-group (concat ":[[:digit:]]+\\|:" ;; :0
+                                zen-re-id-path))    ;; :sentinel
+          "?\\][[:space:]]*"
+          (zen-re-group zen-re-align-const-volatile-syntax)"*"))
+
+
+(defconst zen-re-pointer-type-syntax
+  (concat "[*]"
+          (zen-re-group ":vtable[[:space:]]+")"?"
+          zen-re-align-const-volatile-syntax "*"
+          (zen-re-group "vtable")"?"))
+
+(defconst zen-re-types-syntax
+  (concat (zen-re-group (concat "\\??" ;; optional
+                                (zen-re-group zen-re-pointer-type-syntax) "?"
+                                (zen-re-group zen-re-array-type-syntax) "?"
+                                "[[:space:]]*")) "*"
+          (zen-re-group (concat
+                         zen-builtin-types
+                         "\\|"
+                         zen-re-id-path))))
+
 (defconst zen-re-type-annotation
   (concat (zen-re-grab zen-re-identifier)
           "[[:space:]]*:[[:space:]]*"
-          (zen-re-grab zen-re-identifier)))
+          (zen-re-grab zen-re-types-syntax)))
+
 
 (defun zen-re-definition (dtype)
   "Construct a regular expression for definitions of type DTYPE."
   (concat (zen-re-word dtype) "[[:space:]]+" (zen-re-grab zen-re-identifier)))
+
+(defconst zen-re-catch-value
+  (concat (zen-re-group "catch\\|else\\|=>\\|)")
+          "[[:space:]]*"
+          (zen-re-grab "|")
+          "\\*?"
+          (zen-re-grab zen-re-identifier)
+          (zen-re-grab (concat
+                        (zen-re-group (concat
+                                       "[[:space:]]*,[[:space:]]*"
+                                       zen-re-identifier))
+                        "?"))
+          (zen-re-grab "|")))
+
+
+(defconst zen-re-break-syntax
+  (concat (zen-re-grab "break")
+          (zen-re-grab (concat
+                        (zen-re-group
+                         (concat "[[:space:]]+:"
+                                 zen-re-identifier))
+                        "?"))))
+(defconst zen-re-label-syntax
+  (concat (zen-re-grab (concat zen-re-identifier ":"))
+          "[[:space:]]*{"))
 
 (defconst zen-mode-syntax-table
   (let ((table (make-syntax-table)))
@@ -64,13 +140,14 @@
   '(
     ;; Storage
     "const" "var" "extern" "packed" "export" "pub" "noalias" "inline"
-    "comptime" "nakedcc" "stdcallcc" "volatile" "align" "linksection"
+    "comptime" "nakedcc" "callconv" "volatile" "align" "linksection"
+    "threadlocal"
 
     ;; Structure
-    "struct" "enum" "union" "interface"
+    "struct" "enum" "union" "interface" "error"
 
     ;; Statement
-    "break" "return" "continue" "asm" "defer" "errdefer" "unreachable"
+    "return" "continue" "asm" "defer" "errdefer" "unreachable" ;;"break"
     "try" "catch" "async" "await" "suspend" "resume" "cancel"
 
     ;; Conditional
@@ -80,8 +157,13 @@
     "while" "for"
 
     ;; Other keywords
-    "fn" "use" "test"))
+    "fn" "use" "test" "usingnamespace" "noasync"
 
+    ;; function
+    "noinline" "deprecated"
+    ))
+(defconst zen-slice-range "\\.\\.")
+(defconst zen-int-range "\\.\\.\\.")
 (defconst zen-types
   '(
     ;; Integer types
@@ -100,7 +182,11 @@
     "comptime_int" "comptime_float"
 
     ;; Other types
-    "bool" "void" "noreturn" "type" "error" "anyerror" "promise"))
+    "bool" "void" "noreturn" "type" "anyerror" "promise"
+    ;; Frame
+    "anyframe"
+    ))
+
 
 (defconst zen-constants
   '(
@@ -129,28 +215,60 @@
   "Face for multiline string literals."
   :group 'zen)
 
+(defface zen-label-face
+  '((t :inherit font-lock-builtin-face))
+  "Face for label."
+  :group 'zen)
+
+(defface zen-catch-vertical-bar-face
+  '((t :inherit font-lock-negation-char-face))
+  "Face for catch |x|."
+  :group 'zen)
+
+(defface zen-slice-range-face
+  '((t :inherit font-lock-keyword-face))
+  "Face for .."
+  :group 'zen)
+
+(defface zen-int-range-face
+  '((t :inherit font-lock-negation-char-face))
+  "Face for ..."
+  :group 'zen)
+
 (defvar zen-font-lock-keywords
-  (append
-   `(
-     ;; Builtins (prefixed with @)
-     (,(concat "@" zen-re-identifier) . font-lock-builtin-face)
+  `(
+    (,(zen-re-definition "fn") 1 font-lock-function-name-face)
+    (,(zen-re-definition "var") 1 font-lock-variable-name-face)
+    (,(zen-re-definition "const") 1 font-lock-variable-name-face)
 
-     ;; Keywords, constants and types
-     (,(regexp-opt zen-keywords  'symbols) . font-lock-keyword-face)
-     (,(regexp-opt zen-constants 'symbols) . font-lock-constant-face)
-     (,(regexp-opt zen-types     'symbols) . font-lock-type-face)
+    (,zen-builtin-types . font-lock-type-face)
+    ;; Builtins (prefixed with @)
+    (,(concat "@" zen-re-identifier) . font-lock-builtin-face)
 
-     ;; Type annotations (both variable and type)
-     (,zen-re-type-annotation 1 font-lock-variable-name-face)
-     (,zen-re-type-annotation 2 font-lock-type-face) )
+    (,(regexp-opt zen-keywords  'symbols) . font-lock-keyword-face)
+    ;; break :label
+    (,zen-re-break-syntax (1 font-lock-keyword-face)
+                          (2 'zen-label-face))
+    (,zen-re-label-syntax 1 'zen-label-face)
+    ;; Type annotations (both variable and type)
+    (,zen-re-type-annotation  (1 font-lock-variable-name-face)
+                              (2 font-lock-type-face))
+    ;; |value|
+    (,zen-re-catch-value (1 'zen-catch-vertical-bar-face)
+                         (2 font-lock-variable-name-face)
+                         (3 font-lock-variable-name-face)
+                         (4 'zen-catch-vertical-bar-face))
 
-   ;; Definitions
-   (mapcar (lambda (x)
-               (list (zen-re-definition (car x))
-                     1 (cdr x)))
-           '(("const" . font-lock-variable-name-face)
-             ("var"   . font-lock-variable-name-face)
-             ("fn"    . font-lock-function-name-face)))))
+
+    ;; Keywords, constants and types
+    (,(regexp-opt zen-constants 'symbols) . font-lock-constant-face)
+    (,(regexp-opt zen-types     'symbols) . font-lock-type-face)
+    (,zen-int-range . 'zen-int-range-face)
+    (,zen-slice-range . 'zen-slice-range-face)
+    ("[!.]+" . font-lock-negation-char-face)
+
+    ))
+
 
 (defun zen-paren-nesting-level nil "Return paren nesting level." () (nth 0 (syntax-ppss)))
 (defun zen-currently-in-str nil "Are we currently inside a string?" () (nth 3 (syntax-ppss)))
