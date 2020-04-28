@@ -140,8 +140,8 @@
   '(
     ;; Storage
     "const" "var" "extern" "packed" "export" "pub" "noalias" "inline"
-    "comptime" "nakedcc" "callconv" "volatile" "align" "linksection"
-    "threadlocal"
+    "comptime" "callconv" "volatile" "align" "linksection"
+    "threadlocal" "allowzero"
 
     ;; Structure
     "struct" "enum" "union" "interface" "error"
@@ -157,7 +157,7 @@
     "while" "for"
 
     ;; Other keywords
-    "fn" "use" "test" "usingnamespace" "noasync"
+    "fn" "test" "usingnamespace" "noasync"
 
     ;; function
     "noinline" "deprecated"
