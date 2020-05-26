@@ -44,12 +44,12 @@
 (defconst zen-builtin-types
   "@\\(?:Frame\\|Vector\\|Type\\(Of\\)?\\)")
 
-(defconst zen-re-align-const-volatile-syntax
+(defconst zen-re-align-mut-volatile-syntax
   (concat (zen-re-group
            (concat
             (zen-re-group
              (concat
-              "const[[:space:]]\\|volatile[[:space:]]\\|"
+              "volatile[[:space:]]\\|mut[[:space:]]\\|allowzero[[:space:]]"
               "align(\\(?:[[:space:]]*[[:digit:]]+[[:space:]]*\\|[[:space:]]*@alignOf("
               zen-re-identifier
               "[[:space:]]*)\\))"
@@ -64,14 +64,17 @@
           (zen-re-group (concat ":[[:digit:]]+\\|:" ;; :0
                                 zen-re-id-path))    ;; :sentinel
           "?\\][[:space:]]*"
-          (zen-re-group zen-re-align-const-volatile-syntax)"*"))
+          (zen-re-group zen-re-align-mut-volatile-syntax)"*"))
 
 
 (defconst zen-re-pointer-type-syntax
   (concat "[*]"
           (zen-re-group ":vtable[[:space:]]+")"?"
-          zen-re-align-const-volatile-syntax "*"
+          zen-re-align-mut-volatile-syntax "*"
           (zen-re-group "vtable")"?"))
+
+(defconst zen-re-const-error-syntax
+  "[]*][[:space:]]*\\(\\<const\\>\\)")
 
 (defconst zen-re-types-syntax
   (concat (zen-re-group (concat "\\??" ;; optional
@@ -139,7 +142,7 @@
 (defconst zen-keywords
   '(
     ;; Storage
-    "const" "var" "extern" "packed" "export" "pub" "noalias" "inline"
+    "const" "var" "extern" "packed" "export" "pub" "noalias" "inline" "mut"
     "comptime" "callconv" "volatile" "align" "linksection"
     "threadlocal" "allowzero"
 
@@ -157,7 +160,7 @@
     "while" "for"
 
     ;; Other keywords
-    "fn" "test" "usingnamespace" "noasync"
+    "fn" "test" "usingnamespace" "nosuspend"
 
     ;; function
     "noinline" "deprecated"
@@ -182,7 +185,7 @@
     "comptime_int" "comptime_float"
 
     ;; Other types
-    "bool" "void" "noreturn" "type" "anyerror" "promise"
+    "bool" "void" "noreturn" "type" "anyerror" "anytype"
     ;; Frame
     "anyframe"
     ))
@@ -235,8 +238,17 @@
   "Face for ..."
   :group 'zen)
 
+(defface zen-error-face
+  '((t :inherit font-lock-warning-face
+       :underline t
+       ))
+  "Face for *const, ]const, deprecated"
+  :group 'zen)
+
 (defvar zen-font-lock-keywords
   `(
+    (,zen-re-const-error-syntax 1 'zen-error-face)
+    (,"deprecated" . 'zen-error-face)
     (,(zen-re-definition "fn") 1 font-lock-function-name-face)
     (,(zen-re-definition "var") 1 font-lock-variable-name-face)
     (,(zen-re-definition "const") 1 font-lock-variable-name-face)
@@ -374,6 +386,9 @@ Return at EOF or when END is found."
                       end)))
           (goto-char stop))))))
 
+(defun zen-equal-nonnull (a b)
+  (and a b (= a b)))
+
 (defun zen-syntax-propertize (start end)
   "Function for applying `syntax-table' properties to a specified stretch of text between START and END."
   (goto-char start)
@@ -383,7 +398,7 @@ Return at EOF or when END is found."
     ;; Multiline strings
     ("\\(\\\\\\)\\\\"
      (1 (prog1 "|"
-          (if (= (match-beginning 0) (zen-start-of-current-str-or-comment))
+          (if (zen-equal-nonnull (match-beginning 0) (zen-start-of-current-str-or-comment))
               ;; multiline strings
               (progn
                 (goto-char (match-end 0))

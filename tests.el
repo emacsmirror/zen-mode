@@ -67,10 +67,13 @@ const string =
 
 (ert-deftest test-font-lock-decl-const ()
   (zen-test-font-lock
-   "const greeting = \"Hello, world!\";"
+   "const greeting = \"Hello\\\", world!\";const char = 'x';"
    '(("const" font-lock-keyword-face)
      ("greeting" font-lock-variable-name-face)
-     ("\"Hello, world!\"" font-lock-string-face))))
+     ("\"Hello\\\", world!\"" font-lock-string-face)
+     ("const" font-lock-keyword-face)
+     ("char" font-lock-variable-name-face)
+     ("'x'" font-lock-string-face))))
 
 (ert-deftest test-font-lock-decl-fn ()
   (zen-test-font-lock
@@ -166,6 +169,20 @@ const str =
      ("@Type" font-lock-type-face)
      ("@Frame" font-lock-type-face)
      ("@Vector" font-lock-type-face))))
+
+(ert-deftest test-error-lock-face ()
+  (zen-test-font-lock
+   "var x:[] const u8 = undefined;var x:*const u8 = undefined;depricated"
+   '(("var" font-lock-keyword-face)
+     ("x" font-lock-variable-name-face)
+     ("const" zen-error-face)
+     ("u8" font-lock-variable-name-face)
+     ("undefined" font-lock-constant-face)
+     ("var" font-lock-keyword-face)
+     ("x" font-lock-variable-name-face)
+     ("const" zen-error-face)
+     ("u8" font-lock-variable-name-face)
+     ("undefined" font-lock-constant-face))))
 
 ;;===========================================================================;;
 ;; Indentation tests
