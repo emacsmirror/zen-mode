@@ -5,6 +5,13 @@ Syntax highlighting and automatic indentation for the
 
 ## Installation
 
+[![MELPA](https://melpa.org/packages/zen-mode-badge.svg)](https://melpa.org/#/zen-mode)
+
+Please install the `zen-mode` package via
+[MELPA](https://melpa.org/#/getting-started).
+
+Or, alternatively follow these instructions:
+
 1. Run `mkdir -p ~/.emacs.d/ && cd ~/.emacs.d/`
 2. Run `git clone https://github.com/zenlang/zen-mode.git`
 3. Add the following to your `.emacs` file:

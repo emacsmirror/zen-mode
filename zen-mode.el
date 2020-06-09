@@ -1,7 +1,7 @@
 ;;; zen-mode.el --- A major mode for the Zen programming language -*- lexical-binding: t -*-
 
-;; Version: 0.2.20191224
-;; Author: Andrea Orru <andreaorru1991@gmail.com>, Andrew Kelley <superjoe30@gmail.com>, kristopher tate <kt@connectfree.co.jp>
+;; Version: 0.8.20200609
+;; Author: Andrea Orru <andreaorru1991@gmail.com>, Andrew Kelley <superjoe30@gmail.com>, kristopher tate <kt@connectfree.co.jp>, Yoshitaka Takemoto <yt.3b8@connectfree.co.jp>
 ;; Keywords: zen, languages
 ;; Package-Requires: ((emacs "24.3"))
 ;; URL: https://github.com/zenlang/zen-mode
